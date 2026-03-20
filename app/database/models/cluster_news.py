@@ -7,7 +7,7 @@ from app.database.database import Base
 
 
 class ClusterNews(Base):
-    __tablename__ = "cluster_news"
+    __tablename__ = "clusters_news"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     cluster_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clusters.id"), nullable=False)

@@ -19,3 +19,13 @@ class TelegramChannel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     news: Mapped[list["News"]] = relationship("News", back_populates="channel", cascade="all, delete-orphan")
+    user_channels: Mapped[list["UserTelegramChannel"]] = relationship(
+        "UserTelegramChannel",
+        back_populates="channel",
+        cascade="all, delete-orphan"
+    )
+    users: Mapped[list["User"]] = relationship(
+        "User",
+        secondary="users_telegram_channels",
+        viewonly=True
+    )

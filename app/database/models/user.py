@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.database import Base
+from app.database.models.user_channel import UserTelegramChannel
 from app.utils.time_utils import utc_now
 
 
@@ -38,3 +39,13 @@ class User(Base):
     favorite_digests: Mapped[list["FavoriteDigest"]] = relationship("FavoriteDigest", back_populates="user", cascade="all, delete-orphan")
     token_transactions: Mapped[list["TokenTransaction"]] = relationship("TokenTransaction", back_populates="user", cascade="all, delete-orphan")
     query_history: Mapped[list["QueryHistory"]] = relationship("QueryHistory", back_populates="user", cascade="all, delete-orphan")
+    user_channels: Mapped[list["UserTelegramChannel"]] = relationship(
+        "UserTelegramChannel",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    channels: Mapped[list["TelegramChannel"]] = relationship(
+        "TelegramChannel",
+        secondary="users_telegram_channels",
+        viewonly=True
+    )
