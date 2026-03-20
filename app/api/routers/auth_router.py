@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.auth import STelegramAuthData
+from app.dao.subscription import SubscriptionDAO
 from app.dao.user import UserDAO
 from app.database.database import get_session
 from app.config import settings
@@ -29,6 +30,8 @@ async def telegram_login(
     telegram_id = int(payload["id"])
     
     user_dao = UserDAO(session=session)
+    subscription_dao = SubscriptionDAO(session)
+    base_subscription = await subscription_dao.get_one_or_none(name="Base")
     user = await user_dao.get_by_telegram_id(telegram_id)
     
     if not user:
@@ -36,6 +39,7 @@ async def telegram_login(
             telegram_id=telegram_id,
             username=payload.get("username"),
             first_name=payload.get("first_name"),
+            subscription_id=base_subscription.get("id")
         )
         await session.commit()
         await session.refresh(user)

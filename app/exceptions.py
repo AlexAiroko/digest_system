@@ -28,3 +28,7 @@ class UserNotFoundException(DigestSystemException):
 class UserNotAuthenticatedException(DigestSystemException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "User not authenticated"
+
+class NotAdminException(DigestSystemException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "You don't have enough rights to visit this resource"
