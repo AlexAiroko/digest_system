@@ -1,6 +1,7 @@
 from .user import User
 from .subscription import Subscription
 from .channel import TelegramChannel
+from .user_channel import UserTelegramChannel
 from .cluster import Cluster
 from .cluster_news import ClusterNews
 from .digest import Digest
