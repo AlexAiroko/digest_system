@@ -24,6 +24,7 @@ def verify_telegram_auth(data: dict, bot_token: str):
         hashlib.sha256
     ).hexdigest()
     
+    # Сравниваем посчитанный хэш и хэш от Telegram
     return calculated_hash == telegram_hash
 
 

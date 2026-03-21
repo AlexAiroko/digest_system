@@ -4,7 +4,7 @@ from app.dao.base import BaseDAO
 from app.database.models.channel import TelegramChannel
 
 
-class ChannelDAO(BaseDAO):
+class TelegramChannelDAO(BaseDAO):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, TelegramChannel)
         

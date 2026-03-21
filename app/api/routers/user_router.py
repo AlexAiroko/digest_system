@@ -8,6 +8,7 @@ from app.dao.query_history import QueryHistoryDAO
 from app.dao.subscription import SubscriptionDAO
 from app.database.database import get_session
 from app.database.models.user import User
+from app.exceptions import SubscriptionNotExistsException
 from app.utils.auth.dependencies import get_current_user
 
 
@@ -24,7 +25,9 @@ async def get_user_subscription(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ) -> SSubscription:
-    subscription_dao = SubscriptionDAO(session) 
+    subscription_dao = SubscriptionDAO(session)
+    if not user.subscription_id:
+        raise SubscriptionNotExistsException()
     subscription = await subscription_dao.get_by_id(user.subscription_id)
     return SSubscription.model_validate(subscription)
 

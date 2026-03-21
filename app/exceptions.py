@@ -32,3 +32,6 @@ class UserNotAuthenticatedException(DigestSystemException):
 class NotAdminException(DigestSystemException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "You don't have enough rights to visit this resource"
+
+class SubscriptionNotExistsException(DigestSystemException):
+    status_code = "You don't have any subsription. Contact the administrator or the developer"

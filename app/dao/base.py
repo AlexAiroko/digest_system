@@ -30,5 +30,14 @@ class BaseDAO:
         return obj
     
     async def delete(self, **filter_by):
-        query = delete(self.model).filter_by(**filter_by)
-        await self.session.execute(query)
+        if not filter_by:
+            raise ValueError("Delete requires at least one filter")
+        
+        stmt = (
+            delete(self.model)
+            .filter_by(**filter_by)
+            .returning(self.model) # Возвращаем удаляемое
+        )
+        result = await self.session.execute(stmt)
+        
+        return result.scalars().all()

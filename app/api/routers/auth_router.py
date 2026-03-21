@@ -30,9 +30,10 @@ async def telegram_login(
     telegram_id = int(payload["id"])
     
     user_dao = UserDAO(session=session)
+    user = await user_dao.get_by_telegram_id(telegram_id)
+    # Получаем Base тариф, чтобы установить его для пользователя
     subscription_dao = SubscriptionDAO(session)
     base_subscription = await subscription_dao.get_one_or_none(name="Base")
-    user = await user_dao.get_by_telegram_id(telegram_id)
     
     if not user:
         user = await user_dao.create(

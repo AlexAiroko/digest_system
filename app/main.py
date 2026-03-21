@@ -4,6 +4,10 @@ from app.api.routers.auth_router import router as auth_router
 from app.api.routers.user_router import router as user_router
 from app.api.routers.test_router import router as test_router
 from app.api.routers.subscription_router import router as subscription_router
+from app.api.routers.digest_router import router as digest_router
+from app.api.routers.favorite_digest_router import router as favorite_digest_router
+from app.api.routers.cluster_router import router as cluster_router
+from app.api.routers.channel_router import router as channel_router
 
 
 app = FastAPI() # Создаем экземпляр приложения
@@ -13,6 +17,11 @@ app = FastAPI() # Создаем экземпляр приложения
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(subscription_router)
+app.include_router(digest_router)
+app.include_router(favorite_digest_router)
+app.include_router(cluster_router)
+app.include_router(channel_router)
+
 
 # Тестовый роутер
 app.include_router(test_router)

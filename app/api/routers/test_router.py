@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
 
-router = APIRouter()
+router = APIRouter(tags=["test"])
 
 @router.get("/test_login", response_class=HTMLResponse)
 async def index():
