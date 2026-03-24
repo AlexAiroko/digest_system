@@ -26,7 +26,7 @@ class UserDAO(BaseDAO):
 
         stmt = select(
             date_trunc.label("period"),
-            func.count().label("registrations")
+            func.count().label("value")
         ).where(
             User.created_at.between(date_from, date_to)
         ).group_by("period").order_by("period")
