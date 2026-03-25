@@ -1,7 +1,5 @@
 import io
-import uuid
-from datetime import datetime, date, timedelta
-from typing import Literal, Optional
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 from aiogram import Router, F
@@ -11,12 +9,11 @@ from aiogram.types import BufferedInputFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards.inline import admin_menu
-from app.bot.keyboards.reply import digest_days, skip_filter, back_button
+from app.bot.keyboards.reply import back_button
 from app.bot.states.fsm_states import AdminManagement
 from app.dao.query_history import QueryHistoryDAO
 from app.dao.request_log import RequestLogDAO
 from app.dao.user import UserDAO
-from app.database.models import User
 
 
 router = Router()
@@ -36,8 +33,43 @@ async def show_admin_menu(callback: CallbackQuery):
 async def start_change_tokens(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AdminManagement.waiting_for_user_id)
 
-    await callback.message.answer()
+    await callback.message.answer("Введите id пользователя.")
     await callback.answer()
+
+@router.message(AdminManagement.waiting_for_user_id)
+async def process_user_id(message: Message, state: FSMContext, session: AsyncSession):
+    user_id = int(message.text)
+
+    user_dao = UserDAO(session)
+    user = await user_dao.get_by_telegram_id(user_id)
+
+    await state.update_data(user_id=user_id)
+
+    if not user:
+        await message.answer("Пользователь с таким id не найден.")
+        return
+    else:
+        await state.set_state(AdminManagement.waiting_for_tokens_amount)
+        await message.answer("Введите количество токенов.")
+
+
+@router.message(AdminManagement.waiting_for_tokens_amount)
+async def process_tokens_amount(message: Message, state: FSMContext, session: AsyncSession):
+    data = await state.get_data()
+    user_id = data.get("user_id")
+    tokens_amount = message.text
+
+    if not tokens_amount.isdigit():
+        await message.answer("Неправильно набрано количество токенов!")
+        return
+    elif 999 < int(tokens_amount) < 0:
+        await message.answer("Неправильно набрано количество токенов!")
+        return
+    else:
+        user_dao = UserDAO(session)
+        user = await user_dao.get_by_telegram_id(user_id)
+        user.token_balance = int(tokens_amount)
+        await session.commit()
 
 
 @router.callback_query(F.data == "log_in_chart")
@@ -52,7 +84,6 @@ async def start_log_in_chart_creation(callback: CallbackQuery, state: FSMContext
         parse_mode="HTML"
         )
     await callback.answer()
-
 
 
 @router.callback_query(F.data == "activity_chart")
@@ -72,7 +103,7 @@ async def start_activity_chart_creation(callback: CallbackQuery, state: FSMConte
 @router.callback_query(F.data == "metrics_chart")
 async def start_metrics_chart_creation(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AdminManagement.waiting_for_date_period)
-    await state.update_data(chart_type="metrics", group_by="day")
+    await state.update_data(chart_type="metrics", group_by="hour")
 
     await callback.message.answer(
         "Введите период через запятую:\n"
@@ -106,12 +137,14 @@ async def process_chart_creation(message: Message, state: FSMContext, session: A
         return
     
     if chart_type == "log_in":
-        chart_image = await build_log_in_chart(start_date, end_date, session)
+        chart_image = await build_log_in_chart(start_date, end_date, group_by, session)
     elif chart_type == "activity":
-        chart_image = await build_activity_chart(start_date, end_date, session)
+        chart_image = await build_activity_chart(start_date, end_date, group_by, session)
     elif chart_type == "metrics":
-        chart_image = await build_metrics_chart(start_date, end_date, session)
-    
+        chart_image = await build_metrics_chart(start_date, end_date, group_by, session)
+    else:
+        raise ValueError
+
     await message.answer_photo(photo=chart_image, caption=f"График {chart_type} за период {start_date} – {end_date}")
     
     await state.clear()
@@ -134,7 +167,7 @@ async def build_log_in_chart(
         raise ValueError("Нет данных за выбранный период")
 
     x = [reg.period for reg in registrations]
-    y = [reg.count for reg in registrations]
+    y = [reg.value for reg in registrations]
 
     title = f"Новые пользователи\nс {start_date.date()} по {end_date.date()}"
     xlabel = "Период"
@@ -162,7 +195,6 @@ async def build_activity_chart(
         start_date: datetime,
         end_date: datetime,
         group_by: str,
-        user_id: uuid.UUID,
         session: AsyncSession) -> BufferedInputFile:
     query_history_dao = QueryHistoryDAO(session)
 
@@ -170,7 +202,7 @@ async def build_activity_chart(
         date_from=start_date,
         date_to=end_date,
         group_by=group_by,
-        user_id=user_id
+        user_id=None
     )
 
     if not activity:
@@ -181,7 +213,7 @@ async def build_activity_chart(
 
     title = f"Активность пользователей\nс {start_date.date()} по {end_date.date()}"
     xlabel = "Период"
-    ylabel = "Количество регистраций"
+    ylabel = "Количество запросов"
 
     plt.figure(figsize=(12, 6))
     plt.plot(x, y, marker='o', linestyle='-', color='blue', linewidth=2)
