@@ -68,6 +68,6 @@ class SaigaSummarizer:
             return "Без темы"
         text = cluster_news[0]
         system_msg = "Ты — Сайга. Придумай короткий, информативный заголовок для группы новостей."
-        user_msg = f"Придумай короткий заголовок (3-6 слов) для этой группы новостей:\n\n{text}"
+        user_msg = f"Придумай короткий заголовок (1-4 слова) для этой группы новостей:\n\n{text}. Заголовок должен быть сухим и не броским."
         prompt = self._create_prompt(system_msg, user_msg)
         return await self._call_ollama(prompt, temperature=0.4, max_tokens=50)
