@@ -20,3 +20,7 @@ class UserTelegramChannelDAO(BaseDAO):
         
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def delete(self, **filter_by):
+    # фильтры должны включать и user_id, и channel_id
+        return await super().delete(**filter_by)
