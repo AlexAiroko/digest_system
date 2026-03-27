@@ -1,4 +1,3 @@
-from pathlib import Path
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
@@ -15,6 +14,7 @@ from app.exceptions import AudioNotExistsException, DigestNotExistsException
 from app.utils.auth.dependencies import get_current_user
 from app.processing.tasks.tasks import generate_digest
 from app.dao.user_channel import UserTelegramChannelDAO
+from app.config import settings
 
 
 router = APIRouter(prefix="/digests", tags=["digests"])
@@ -103,9 +103,8 @@ async def get_digest_audio(
     if not digest.audio_path:
         raise AudioNotExistsException()
     
-    # Путь до storage/audio
-    BASE_DIR = Path(__file__).resolve().parents[3]
-    audio_file_path = BASE_DIR / "storage" / "audio" / digest.audio_path # Полный относительный путь до аудиофайла
+    # Полный относительный путь до аудиофайла
+    audio_file_path = settings.audio_path / digest.audio_path 
     
     if not audio_file_path.exists():
         raise AudioNotExistsException()
