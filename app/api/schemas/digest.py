@@ -17,6 +17,8 @@ class SDigest(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
 class SDigestCreate(BaseModel):
     channels: Optional[List[str]] = None
     date_from: date
