@@ -78,8 +78,20 @@ async def delete_user_channel(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ) -> STelegramChannel:
+    # Получаем канал, чтобы потом вернуть его
+    channel_dao = TelegramChannelDAO(session)
+    channel = await channel_dao.get_by_id(channel_id)
+    if not channel:
+        raise HTTPException(status_code=404, detail="Channel not found")
+
     user_channel_dao = UserTelegramChannelDAO(session)
-    deleted_channel = (await user_channel_dao.delete(user_id=user.id, channel_id=channel_id))[0]
+    # Проверяем, что канал принадлежит пользователю
+    user_channels = await user_channel_dao.get_user_channels(user.id)
+    if channel.id not in [c.id for c in user_channels]:
+        raise HTTPException(status_code=404, detail="Channel not found for this user")
+
+    # Удаляем связь
+    await user_channel_dao.delete(user_id=user.id, channel_id=channel_id)
     await session.commit()
     try:
         model = STelegramChannel.model_validate(deleted_channel)
